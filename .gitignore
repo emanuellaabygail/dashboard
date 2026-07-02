@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Django
+*.log
+backend/staticfiles/
+backend/media/*
+!backend/media/.gitkeep
+
+# Environment
+.env
+backend/.env
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
