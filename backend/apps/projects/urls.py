@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-from django.urls import path
+from rest_framework.routers import DefaultRouter
+
+from apps.projects.views import ProjectViewSet
 
 
 app_name = "projects"
 
-urlpatterns: list[path] = []
+router = DefaultRouter()
+router.register("", ProjectViewSet, basename="project")
+
+urlpatterns = router.urls

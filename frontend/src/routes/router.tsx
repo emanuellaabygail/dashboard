@@ -1,27 +1,76 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import { App } from "@/app";
-import { AnalyticsPage } from "@/pages/analytics-page";
-import { DashboardPage } from "@/pages/dashboard-page";
+import { AuthGuard } from "@/features/authentication/components/auth-guard";
 import { NotFoundPage } from "@/pages/not-found-page";
-import { ProjectsPage } from "@/pages/projects-page";
-import { ReportsPage } from "@/pages/reports-page";
-import { SettingsPage } from "@/pages/settings-page";
-import { TemplatesPage } from "@/pages/templates-page";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: (
+      <AuthGuard>
+        <App />
+      </AuthGuard>
+    ),
     errorElement: <NotFoundPage />,
     children: [
-      { index: true, element: <DashboardPage /> },
-      { path: "projects", element: <ProjectsPage /> },
-      { path: "templates", element: <TemplatesPage /> },
-      { path: "reports", element: <ReportsPage /> },
-      { path: "analytics", element: <AnalyticsPage /> },
-      { path: "settings", element: <SettingsPage /> }
+      {
+        index: true,
+        lazy: async () => {
+          const { DashboardPage } = await import("@/pages/dashboard-page");
+          return { Component: DashboardPage };
+        }
+      },
+      {
+        path: "projects",
+        lazy: async () => {
+          const { ProjectsPage } = await import("@/pages/projects-page");
+          return { Component: ProjectsPage };
+        }
+      },
+      {
+        path: "templates",
+        lazy: async () => {
+          const { TemplatesPage } = await import("@/pages/templates-page");
+          return { Component: TemplatesPage };
+        }
+      },
+      {
+        path: "reports",
+        lazy: async () => {
+          const { ReportsPage } = await import("@/pages/reports-page");
+          return { Component: ReportsPage };
+        }
+      },
+      {
+        path: "analytics",
+        lazy: async () => {
+          const { AnalyticsPage } = await import("@/pages/analytics-page");
+          return { Component: AnalyticsPage };
+        }
+      },
+      {
+        path: "settings",
+        lazy: async () => {
+          const { SettingsPage } = await import("@/pages/settings-page");
+          return { Component: SettingsPage };
+        }
+      }
     ]
+  },
+  {
+    path: "/login",
+    lazy: async () => {
+      const { LoginPage } = await import("@/pages/login-page");
+      return { Component: LoginPage };
+    }
+  },
+  {
+    path: "/signup",
+    lazy: async () => {
+      const { SignUpPage } = await import("@/pages/signup-page");
+      return { Component: SignUpPage };
+    }
   },
   {
     path: "*",

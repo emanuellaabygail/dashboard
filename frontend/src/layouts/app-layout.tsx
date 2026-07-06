@@ -1,7 +1,9 @@
 import type { PropsWithChildren } from "react";
-import { BarChart3, FileSpreadsheet, FolderKanban, LayoutDashboard, Settings, Upload } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { BarChart3, FileSpreadsheet, FolderKanban, LayoutDashboard, LogOut, Settings, Upload } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
 
+import { Button } from "@/components/ui/button";
+import { useCurrentUser, useLogout } from "@/features/authentication/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 const navigationItems = [
@@ -14,6 +16,17 @@ const navigationItems = [
 ];
 
 export function AppLayout({ children }: PropsWithChildren) {
+  const navigate = useNavigate();
+  const currentUserQuery = useCurrentUser();
+  const logoutMutation = useLogout();
+  const user = currentUserQuery.data;
+  const displayName = user?.full_name || user?.username || "Signed in";
+
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r bg-card lg:block">
@@ -45,10 +58,26 @@ export function AppLayout({ children }: PropsWithChildren) {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
           <div>
             <p className="text-sm font-semibold">Project reporting workspace</p>
             <p className="text-xs text-muted-foreground">Progress data normalized from Excel uploads</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-muted-foreground">Authenticated session</p>
+            </div>
+            <Button
+              aria-label="Sign out"
+              disabled={logoutMutation.isPending}
+              onClick={handleLogout}
+              size="icon"
+              type="button"
+              variant="ghost"
+            >
+              <LogOut className="size-4" aria-hidden="true" />
+            </Button>
           </div>
         </header>
         <main className="px-4 py-6 sm:px-6">{children}</main>
