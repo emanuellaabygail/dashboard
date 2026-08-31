@@ -1,7 +1,8 @@
 import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { Project, ProjectStatus } from "@/features/projects/types";
+import { useRequestAccess } from "@/features/access/hooks/use-access";
+import type { Project, ProjectAccessStatus, ProjectStatus } from "@/features/projects/types";
 
 const statusLabels: Record<ProjectStatus, string> = {
   planned: "Planned",
@@ -19,14 +20,53 @@ const statusStyles: Record<ProjectStatus, string> = {
   cancelled: "bg-red-100 text-red-800"
 };
 
+const accessLabels: Record<ProjectAccessStatus, string> = {
+  admin: "Full access",
+  approved: "Access granted",
+  pending: "Request pending",
+  denied: "Request denied",
+  none: "No access"
+};
+
+const accessStyles: Record<ProjectAccessStatus, string> = {
+  admin: "bg-secondary text-secondary-foreground",
+  approved: "bg-green-100 text-green-800",
+  pending: "bg-amber-100 text-amber-800",
+  denied: "bg-red-100 text-red-800",
+  none: "bg-muted text-muted-foreground"
+};
+
+export function AccessCell({ project }: { project: Project }) {
+  const requestMutation = useRequestAccess();
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`rounded-full px-2 py-1 text-xs font-medium ${accessStyles[project.access_status]}`}>
+        {accessLabels[project.access_status]}
+      </span>
+      {project.access_status === "none" || project.access_status === "denied" ? (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={requestMutation.isPending}
+          onClick={() => requestMutation.mutate(project.id)}
+        >
+          Request access
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 interface ProjectTableProps {
   projects: Project[];
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
   deletingId: number | null;
+  canManage: boolean;
 }
 
-export function ProjectTable({ projects, onEdit, onDelete, deletingId }: ProjectTableProps) {
+export function ProjectTable({ projects, onEdit, onDelete, deletingId, canManage }: ProjectTableProps) {
   if (projects.length === 0) {
     return (
       <div className="flex h-48 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
@@ -45,8 +85,8 @@ export function ProjectTable({ projects, onEdit, onDelete, deletingId }: Project
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium">Start</th>
             <th className="px-4 py-3 font-medium">End</th>
-            <th className="px-4 py-3 font-medium">Created by</th>
-            <th className="px-4 py-3 text-right font-medium">Actions</th>
+            <th className="px-4 py-3 font-medium">Access</th>
+            {canManage ? <th className="px-4 py-3 text-right font-medium">Actions</th> : null}
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -61,28 +101,32 @@ export function ProjectTable({ projects, onEdit, onDelete, deletingId }: Project
               </td>
               <td className="px-4 py-3 text-muted-foreground">{project.start_date ?? "—"}</td>
               <td className="px-4 py-3 text-muted-foreground">{project.end_date ?? "—"}</td>
-              <td className="px-4 py-3 text-muted-foreground">{project.created_by_username}</td>
               <td className="px-4 py-3">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    aria-label={`Edit ${project.name}`}
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => onEdit(project)}
-                  >
-                    <Pencil className="size-4" aria-hidden="true" />
-                  </Button>
-                  <Button
-                    aria-label={`Delete ${project.name}`}
-                    size="icon"
-                    variant="ghost"
-                    disabled={deletingId === project.id}
-                    onClick={() => onDelete(project)}
-                  >
-                    <Trash2 className="size-4" aria-hidden="true" />
-                  </Button>
-                </div>
+                <AccessCell project={project} />
               </td>
+              {canManage ? (
+                <td className="px-4 py-3">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      aria-label={`Edit ${project.name}`}
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => onEdit(project)}
+                    >
+                      <Pencil className="size-4" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      aria-label={`Delete ${project.name}`}
+                      size="icon"
+                      variant="ghost"
+                      disabled={deletingId === project.id}
+                      onClick={() => onDelete(project)}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>

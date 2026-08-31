@@ -4,6 +4,8 @@ import { FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { isAdminRole } from "@/features/access/lib/roles";
+import { useCurrentUser } from "@/features/authentication/hooks/use-auth";
 import { ProjectForm } from "@/features/projects/components/project-form";
 import { ProjectTable } from "@/features/projects/components/project-table";
 import {
@@ -20,6 +22,9 @@ export function ProjectsPage() {
   const [search, setSearch] = useState("");
   const [formMode, setFormMode] = useState<FormMode>({ kind: "closed" });
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const currentUserQuery = useCurrentUser();
+  const canManage = isAdminRole(currentUserQuery.data?.role);
 
   const projectsQuery = useProjects({ search });
   const createMutation = useCreateProject();
@@ -56,13 +61,15 @@ export function ProjectsPage() {
           <h1 className="text-2xl font-semibold">Projects</h1>
           <p className="text-sm text-muted-foreground">Manage the engineering projects tracked in this workspace.</p>
         </div>
-        <Button onClick={() => setFormMode({ kind: "create" })} disabled={formMode.kind !== "closed"}>
-          <FolderKanban className="size-4" aria-hidden="true" />
-          New Project
-        </Button>
+        {canManage ? (
+          <Button onClick={() => setFormMode({ kind: "create" })} disabled={formMode.kind !== "closed"}>
+            <FolderKanban className="size-4" aria-hidden="true" />
+            New Project
+          </Button>
+        ) : null}
       </div>
 
-      {formMode.kind !== "closed" ? (
+      {formMode.kind !== "closed" && canManage ? (
         <Card>
           <CardHeader>
             <CardTitle>{formMode.kind === "edit" ? "Edit project" : "Create project"}</CardTitle>
@@ -113,6 +120,7 @@ export function ProjectsPage() {
               onEdit={(project) => setFormMode({ kind: "edit", project })}
               onDelete={handleDelete}
               deletingId={deletingId}
+              canManage={canManage}
             />
           )}
         </CardContent>

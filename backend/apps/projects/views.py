@@ -2,13 +2,17 @@ from __future__ import annotations
 
 from rest_framework import permissions, viewsets
 
+from apps.access.permissions import IsAdminRole
 from apps.projects.serializers import ProjectSerializer
 from apps.projects.services import ProjectService
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
+    """List/retrieve is open to every authenticated user (per RBAC design, everyone can
+    see the project directory); create/update/delete requires an admin role."""
+
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminRole]
     filterset_fields = ["status"]
 
     def get_queryset(self):

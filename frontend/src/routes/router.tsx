@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 import { App } from "@/app";
 import { AuthGuard } from "@/features/authentication/components/auth-guard";
+import { AdminRoleGuard } from "@/features/authentication/components/role-guard";
 import { NotFoundPage } from "@/pages/not-found-page";
 
 export const router = createBrowserRouter([
@@ -54,6 +55,19 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { SettingsPage } = await import("@/pages/settings-page");
           return { Component: SettingsPage };
+        }
+      },
+      {
+        path: "access",
+        lazy: async () => {
+          const { AccessPage } = await import("@/pages/access-page");
+          return {
+            Component: () => (
+              <AdminRoleGuard>
+                <AccessPage />
+              </AdminRoleGuard>
+            )
+          };
         }
       }
     ]

@@ -1,3 +1,5 @@
+export type UserRole = "superadmin" | "project_admin" | "user";
+
 export interface AuthUser {
   id: number;
   username: string;
@@ -5,6 +7,7 @@ export interface AuthUser {
   first_name: string;
   last_name: string;
   full_name: string;
+  role: UserRole;
 }
 
 export interface LoginCredentials {

@@ -3,6 +3,8 @@ from __future__ import annotations
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from apps.access.permissions import get_role
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=254)
@@ -35,11 +37,15 @@ class SignUpSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "full_name"]
+        fields = ["id", "username", "email", "first_name", "last_name", "full_name", "role"]
         read_only_fields = fields
 
     def get_full_name(self, user: User) -> str:
         return user.get_full_name()
+
+    def get_role(self, user: User) -> str:
+        return get_role(user)

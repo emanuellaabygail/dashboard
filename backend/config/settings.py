@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "apps.authentication",
+    "apps.access",
     "apps.projects",
     "apps.templates",
     "apps.reports",
