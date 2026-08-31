@@ -22,7 +22,8 @@ const projectSchema = z
     description: z.string().max(2000).optional(),
     status: z.enum(["planned", "in_progress", "on_hold", "completed", "cancelled"]),
     start_date: z.string().optional(),
-    end_date: z.string().optional()
+    end_date: z.string().optional(),
+    contract_value: z.string().optional()
   })
   .refine((values) => !values.start_date || !values.end_date || values.start_date <= values.end_date, {
     message: "End date must be on or after the start date.",
@@ -47,7 +48,8 @@ export function ProjectForm({ project, isSubmitting, onSubmit, onCancel }: Proje
       description: project?.description ?? "",
       status: project?.status ?? "planned",
       start_date: project?.start_date ?? "",
-      end_date: project?.end_date ?? ""
+      end_date: project?.end_date ?? "",
+      contract_value: project?.contract_value ?? ""
     }
   });
 
@@ -58,7 +60,8 @@ export function ProjectForm({ project, isSubmitting, onSubmit, onCancel }: Proje
       description: values.description ?? "",
       status: values.status,
       start_date: values.start_date || null,
-      end_date: values.end_date || null
+      end_date: values.end_date || null,
+      contract_value: values.contract_value ? values.contract_value : null
     });
   });
 
@@ -118,6 +121,21 @@ export function ProjectForm({ project, isSubmitting, onSubmit, onCancel }: Proje
           {form.formState.errors.end_date ? (
             <p className="text-sm text-destructive">{form.formState.errors.end_date.message}</p>
           ) : null}
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="contract_value">Contract value (IDR)</Label>
+          <Input
+            id="contract_value"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="e.g. 959000000000"
+            disabled={isSubmitting}
+            {...form.register("contract_value")}
+          />
         </div>
       </div>
 
