@@ -6,9 +6,6 @@ const apiBaseUrl =
 
 export const httpClient = axios.create({
   baseURL: apiBaseUrl,
-  headers: {
-    "Content-Type": "application/json"
-  },
   timeout: 15_000,
   withCredentials: true,
   xsrfCookieName: "csrftoken",
