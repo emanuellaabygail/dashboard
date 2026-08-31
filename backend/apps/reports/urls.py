@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-from django.urls import path
+from rest_framework.routers import DefaultRouter
+
+from apps.reports.views import ReportViewSet
 
 
 app_name = "reports"
 
-urlpatterns: list[path] = []
+router = DefaultRouter()
+router.register("", ReportViewSet, basename="report")
+
+urlpatterns = router.urls
