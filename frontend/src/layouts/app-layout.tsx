@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Settings,
   ShieldCheck,
   Upload,
   X
@@ -23,8 +22,7 @@ const navigationItems = [
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Templates", href: "/templates", icon: FileSpreadsheet },
   { label: "Reports", href: "/reports", icon: Upload },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Settings", href: "/settings", icon: Settings }
+  { label: "Analytics", href: "/analytics", icon: BarChart3 }
 ];
 
 export function AppLayout({ children }: PropsWithChildren) {

@@ -51,13 +51,6 @@ export const router = createBrowserRouter([
         }
       },
       {
-        path: "settings",
-        lazy: async () => {
-          const { SettingsPage } = await import("@/pages/settings-page");
-          return { Component: SettingsPage };
-        }
-      },
-      {
         path: "access",
         lazy: async () => {
           const { AccessPage } = await import("@/pages/access-page");
