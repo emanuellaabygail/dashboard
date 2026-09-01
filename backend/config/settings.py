@@ -4,8 +4,14 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Present only in the production image (see root Dockerfile), which copies the built
+# React app here so Django can serve it as static files under the same origin as the
+# API — avoiding cross-site cookies for session/CSRF auth entirely.
+FRONTEND_DIST = BASE_DIR / "frontend_dist"
 
 
 def get_env(name: str, default: str = "") -> str:
@@ -50,6 +56,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -63,7 +70,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [FRONTEND_DIST] if FRONTEND_DIST.exists() else [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -77,16 +84,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": get_env("POSTGRES_DB", "engineering_progress"),
-        "USER": get_env("POSTGRES_USER", "engineering_progress"),
-        "PASSWORD": get_env("POSTGRES_PASSWORD", "engineering_progress"),
-        "HOST": get_env("POSTGRES_HOST", "localhost"),
-        "PORT": get_env("POSTGRES_PORT", "5432"),
+# Managed Postgres hosts (Railway, Render, Heroku, ...) inject a single DATABASE_URL;
+# local docker-compose keeps using the discrete POSTGRES_* variables.
+if get_env("DATABASE_URL"):
+    DATABASES = {"default": dj_database_url.parse(get_env("DATABASE_URL"), conn_max_age=600)}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": get_env("POSTGRES_DB", "engineering_progress"),
+            "USER": get_env("POSTGRES_USER", "engineering_progress"),
+            "PASSWORD": get_env("POSTGRES_PASSWORD", "engineering_progress"),
+            "HOST": get_env("POSTGRES_HOST", "localhost"),
+            "PORT": get_env("POSTGRES_PORT", "5432"),
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -111,11 +123,25 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+
+# Serves the built React app's hashed asset files (e.g. /assets/index-abc123.js) straight
+# from the root, alongside STATIC_URL — only present in the production image.
+if FRONTEND_DIST.exists():
+    WHITENOISE_ROOT = FRONTEND_DIST
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+if not DEBUG:
+    # Railway (and most PaaS) terminate TLS at the edge and forward plain HTTP internally,
+    # so Django needs to trust that header to know the original request was HTTPS.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = get_bool_env("DJANGO_SECURE_SSL_REDIRECT", True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
